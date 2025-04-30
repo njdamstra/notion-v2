@@ -60,7 +60,7 @@ app.post("/new-song", async (req, res) => {
       rich_text: [{ text: { content: track_id } }],
     },
     Genre: {
-      rich_text: [{ text: { content: genre || "Unknown" } }],
+      select: { name: genre || "Unknown" },
     },
     Year: {
       number: parseInt(year) || undefined,
