@@ -8,48 +8,101 @@ const app = express();
 app.use(express.json());
 
 const notion = new Client({ auth: process.env.NOTION_TOKEN });
-const notesDBid = process.env.NOTION_NOTE_DATABASE;
+const musicDBid = process.env.NOTION_MUSIC_DATABASE;
 
-// Add a homepage route
+// Root route for testing
 app.get("/", (req, res) => {
   res.send("Server is running!");
 });
 
-// Error handling middleware
+// Error handler
 app.use((err, req, res, next) => {
   console.error(err.stack);
   res.status(500).send("Something broke!");
 });
 
+// Start server
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, "0.0.0.0", () => {
   console.log(`🌍 Server running on http://0.0.0.0:${PORT}`);
 });
 
+// Webhook route
 app.post("/new-song", async (req, res) => {
-  const { trackName, artist, album, url } = req.body;
+  const {
+    trackName,
+    artist,
+    album,
+    url,
+    time_liked,
+    album_cover,
+    track_id,
+    genre,
+    year,
+    idea,
+    similarSongs = [],
+  } = req.body;
 
   const properties = {
-    Name: {
+    TrackName: {
       title: [{ text: { content: `${trackName} – ${artist}` } }],
-    },
-    Type: {
-      select: { name: "Music" },
     },
     URL: {
       url: url,
     },
-    // Optional: add relation if needed
-    Tag: {
-      relation: [{ id: "1e56d62fd29c80e1a034da16409da817" }],
+    TimeSaved: {
+      date: { start: time_liked },
     },
+    AlbumCover: {
+      url: album_cover,
+    },
+    TrackId: {
+      rich_text: [{ text: { content: track_id } }],
+    },
+    Genre: {
+      rich_text: [{ text: { content: genre || "Unknown" } }],
+    },
+    Year: {
+      number: parseInt(year) || undefined,
+    },
+    PlaylistSuggestion: {
+      rich_text: [{ text: { content: idea || "" } }],
+    },
+    SimilarSongs: {
+      rich_text: [
+        {
+          text: {
+            content: Array.isArray(similarSongs)
+              ? similarSongs.join(", ")
+              : "",
+          },
+        },
+      ],
+    },
+    // Optional: Tag relation if using a tag database
+    // Tag: {
+    //   relation: [{ id: "1e56d62fd29c80e1a034da16409da817" }],
+    // },
   };
 
-  const pageBody = `🎵 Track: ${trackName}\n👤 Artist: ${artist}\n💽 Album: ${album}\n🔗 ${url}`;
+  const pageBody = `
+🎵 Track: ${trackName}
+👤 Artist: ${artist}
+💽 Album: ${album}
+🕒 Liked at: ${time_liked}
+🖼️ Album Cover: ${album_cover}
+🆔 Track ID: ${track_id}
+🎧 Genre: ${genre}
+📆 Year: ${year}
+💡 Playlist Idea: ${idea}
+🎶 Similar Songs:
+${(similarSongs || []).join("\n")}
+🔗 ${url}
+`.trim();
 
   try {
     const newPage = await notion.pages.create({
-      parent: { database_id: notesDBid },
+      parent: { database_id: musicDBid },
       properties: properties,
       children: [
         {
@@ -69,3 +122,4 @@ app.post("/new-song", async (req, res) => {
     res.status(500).json({ error: error.body || error });
   }
 });
+
