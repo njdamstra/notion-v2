@@ -54,7 +54,15 @@ app.post("/new-song", async (req, res) => {
       date: { start: time_liked },
     },
     AlbumCover: {
-      url: album_cover,
+      files: [
+        {
+          name: "AlbumCover",
+          type: "external",
+          external: {
+            url: album_cover
+          }
+        }
+      ]
     },
     TrackId: {
       rich_text: [{ text: { content: track_id } }],
