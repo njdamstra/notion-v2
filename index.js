@@ -45,7 +45,13 @@ app.post("/new-song", async (req, res) => {
 
   const properties = {
     TrackName: {
-      title: [{ text: { content: `${trackName} – ${artist}` } }],
+      title: [{ text: { content: trackName } }],
+    },
+    Album: {
+      rich_text: [{ text: { content: album } }],
+    },
+    Artist: {
+      rich_text: [{ text: { content: artist } }],
     },
     URL: {
       url: url,
@@ -54,15 +60,7 @@ app.post("/new-song", async (req, res) => {
       date: { start: time_liked },
     },
     AlbumCover: {
-      files: [
-        {
-          name: "AlbumCover",
-          type: "external",
-          external: {
-            url: album_cover
-          }
-        }
-      ]
+      url: album_cover,
     },
     TrackId: {
       rich_text: [{ text: { content: track_id } }],
